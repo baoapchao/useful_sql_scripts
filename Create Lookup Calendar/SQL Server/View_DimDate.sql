@@ -1,0 +1,43 @@
+USE [boody_xero]
+GO
+
+/****** Object:  View [dbo].[v_calendardate]    Script Date: 12/2/2021 1:48:57 PM ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+
+
+
+ALTER VIEW [dbo].[v_calendardate] AS
+WITH CTE1 AS (
+SELECT *,
+	--isToday   = CASE WHEN Date = CONVERT(DATE, DATEADD(Hour, 11, GETDATE())) THEN 1 ELSE 0 END,
+	--isBeforeToday = CASE WHEN Date < CONVERT(DATE, DATEADD(Hour, 11, GETDATE())) THEN 1 ELSE 0 END,
+	--isOnorBeforeToday = CASE WHEN Date <= CONVERT(DATE, DATEADD(Hour, 11, GETDATE())) THEN 1 ELSE 0 END,
+	Today = CONVERT(DATE, DATEADD(Hour, 11, GETDATE())),
+	ThisFYEAR = CASE WHEN DatePart(Month, CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))) <= 6 THEN RIGHT(DatePart(Year, CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))),2) ELSE RIGHT(DatePart(Year, CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))) + 1, 2) END 
+	--isThisFYEAR = 
+	--isYesterday = CASE WHEN DATEADD(DAY, - 1, CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))) = Date THEN 1 ELSE 0 END, 
+	--isThisWeek = CASE WHEN WeekEnding = DATEADD(dd, 7-(DATEPART(dw, CONVERT(DATE, DATEADD(Hour, 11, GETDATE())))), CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))) THEN 1 ELSE 0 END,
+	--isThisMonth = CASE WHEN MonthInCalendar = DATEFROMPARTS(YEAR(CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))), MONTH(CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))), 1) THEN 1 ELSE 0 END,
+	--isLast6Months = CASE WHEN DATEADD(MONTH, -6, DATEFROMPARTS(YEAR(CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))), MONTH(CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))), 1)) <= Date AND  EOMONTH(DATEADD(Hour, 11, GETDATE()), -1) >= Date THEN 1 ELSE 0 END,
+	--isLast7Days = CASE WHEN DATEADD(DAY, -7, CONVERT(DATE, DATEADD(Hour, 11, GETDATE()))) <= Date AND  CONVERT(DATE, DATEADD(Hour, 11, GETDATE())) >= Date THEN 1 ELSE 0 END
+FROM dbo.CalendarDate
+)
+SELECT *,
+	isToday   = CASE WHEN Date = Today THEN 1 ELSE 0 END,
+	isBeforeToday = CASE WHEN Date < Today THEN 1 ELSE 0 END,
+	isOnorBeforeToday = CASE WHEN Date <= Today THEN 1 ELSE 0 END,
+	isThisFYEAR = CASE WHEN ThisFYEAR = ShortFinancialYear THEN 1 ELSE 0 END,
+	isYesterday = CASE WHEN DATEADD(DAY, - 1, Today) = Date THEN 1 ELSE 0 END, 
+	isThisWeek = CASE WHEN WeekEnding = DATEADD(dd, 7-(DATEPART(dw, Today)), Today) THEN 1 ELSE 0 END,
+	isThisMonth = CASE WHEN MonthInCalendar = DATEFROMPARTS(YEAR(Today), MONTH(Today), 1) THEN 1 ELSE 0 END,
+	isLast6Months = CASE WHEN DATEADD(MONTH, -6, DATEFROMPARTS(YEAR(Today), MONTH(Today), 1)) <= Date AND  EOMONTH(DATEADD(Hour, 11, GETDATE()), -1) >= Date THEN 1 ELSE 0 END,
+	isLast7Days = CASE WHEN DATEADD(DAY, -7, Today) <= Date AND  Today >= Date THEN 1 ELSE 0 END,
+	isLastWeek = CASE WHEN WeekEnding = DATEADD(dd, 0-(DATEPART(dw, Today)), Today) THEN 1 ELSE 0 END 
+FROM CTE1
+
+GO
